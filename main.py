@@ -15,16 +15,19 @@ MEAL3 = 11
 
 # Read csv file and return a 2d array width person
 def Read_file(File_path):
-    peson = [""]
-    persons = [[peson]]
+    persons = [[]]
     with open(File_path, 'rb') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
         for row in spamreader:
-            peson = row
-            list.append(persons, peson)
+            list.append(persons, row)
+
+    i = 0
+    for p in persons:
+        if len(p) <= 5:
+            del persons[i]
+        i +=1
 
     return persons
-
 
 # Send Email to everyone
 def send_email(email_content):
@@ -34,18 +37,12 @@ def send_email(email_content):
 # Decide all
 def decide_meal(persons):
 
-    adresses = [""]
-    i = 0
+    adresses = []
     for p in persons:
-        if len(p) < 10:
-            print(i)
-            p.remove(p.index())
+        list.append(adresses, p[ADRESS])
 
-        print(p)
-        #list.append(adresses,p[ADRESS])
-        i += 1
 
-    print(adresses)
+
 
     return persons
 
@@ -58,7 +55,7 @@ def decide_route(p):
 
 
 def main():
-    persons = Read_file("../test.csv")
+    persons = Read_file("../Test.csv")
 
     persons = decide_meal(persons)
 
