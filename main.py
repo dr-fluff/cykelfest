@@ -1,4 +1,6 @@
 import csv
+import ssl
+import smtplib
 
 # Constants
 TEAMNR = 0
@@ -16,7 +18,7 @@ PLACE3 = 11
 #Defines a class "pair", contact info and preferences
 class Pair:
 
-    def __init__(self, pairnr, name, email, phonenr, adress, alergy, teammember, tocook, place1, place2, place3):
+    def __init__(self, pairnr, name, email, phonenr, adress,friend, alergy, teammember, tocook, place1, place2, place3):
         self.pairnr = pairnr
         self.name = name
         self.friend = friend
@@ -32,7 +34,7 @@ def Read_file(File_path):
         spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
         pairs = []
         for row in spamreader:
-            pair = Pair(row[0],row[2],row[3],row[4],row[5],row[6],row[7],row[8])
+            pair = Pair(row[TEAMNR],row[NAME],row[EMAIL],row[PHONENR],row[ADRESS],row[ALERGY],row[TEAMMEMBER],-1,-1,-1,-1,-1)
             pairs.append(pair)
 
     return pairs
@@ -41,7 +43,7 @@ def Read_file(File_path):
 def send_email(recipient, message):
     sender = "max@idermark.com"
     port = 465 #for ssl
-    password = "superhemligt_plaintext_en_hackeres_dröm"
+    password = "asd"
 
     # Create a secure SSL context
     context = ssl.create_default_context()
@@ -54,13 +56,6 @@ def send_email(recipient, message):
 # Decide all
 def decide_meal(persons):
 
-    adresses = []
-    for p in persons:
-        list.append(adresses, p[ADRESS])
-
-
-
-
     return persons
 
 
@@ -72,10 +67,7 @@ def decide_route(p):
 
 
 def main():
-    persons = Read_file("../Test.csv")
+    pairs = Read_file("../Test.csv")
 
-    persons = decide_meal(persons)
-
-    persons = decide_route(persons)
 
 main()
