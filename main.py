@@ -9,29 +9,46 @@ ADRESS = 5
 ALERGY = 6
 TEAMMEMBER = 7
 MEAL = 8
-MEAL1 = 9
-MEAL2 = 10
-MEAL3 = 11
+PLACE1 = 9
+PLACE2 = 10
+PLACE3 = 11
+
+#Defines a class "pair", contact info and preferences
+class Pair:
+
+    def __init__(self, pairnr, name, email, phonenr, adress, alergy, teammember, tocook, place1, place2, place3):
+        self.pairnr = pairnr
+        self.name = name
+        self.friend = friend
+        self.email = email
+        self.phonenr = phonenr
+        self.adress = adress
+        self.alergy = alergy
+        self.teammember = teammember
 
 # Read csv file and return a 2d array width person
 def Read_file(File_path):
-    persons = [[]]
     with open(File_path, 'rb') as csvfile:
         spamreader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        pairs = []
         for row in spamreader:
-            list.append(persons, row)
+            pair = Pair(row[0],row[2],row[3],row[4],row[5],row[6],row[7],row[8])
+            pairs.append(pair)
 
-    i = 0
-    for p in persons:
-        if len(p) <= 5:
-            del persons[i]
-        i +=1
+    return pairs
 
-    return persons
+# Send an email to recipent with message
+def send_email(recipient, message):
+    sender = "max@idermark.com"
+    port = 465 #for ssl
+    password = "superhemligt_plaintext_en_hackeres_dröm"
 
-# Send Email to everyone
-def send_email(email_content):
-    print(email_content)
+    # Create a secure SSL context
+    context = ssl.create_default_context()
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
+        server.login(sender, password)
+        server.sendmail(sender, recipient, message.encode("utf-8"))
 
 
 # Decide all
