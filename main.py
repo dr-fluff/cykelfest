@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -- coding: utf-8 --
 import csv
 import ssl
 import smtplib
@@ -27,6 +29,10 @@ class Pair:
         self.adress = adress
         self.alergy = alergy
         self.teammember = teammember
+        self.tocook = tocook
+        self.place1 = place1
+        self.place2 = place2
+        self.place3 = place3
 
 # Read csv file and return a 2d array width person
 def Read_file(File_path):
@@ -36,6 +42,8 @@ def Read_file(File_path):
         for row in spamreader:
             pair = Pair(row[TEAMNR],row[NAME],row[EMAIL],row[PHONENR],row[ADRESS],row[ALERGY],row[TEAMMEMBER],-1,-1,-1,-1,-1)
             pairs.append(pair)
+
+    del pairs[0]
 
     return pairs
 
@@ -54,10 +62,84 @@ def send_email(recipient, message):
 
 
 # Decide all
-def decide_meal(persons):
+def decide_meal(Pairs):
 
-    return persons
+    amont_of_pairs = len(Pairs)
+    amount_of_pepole_per_meal = amont_of_pairs / 3
 
+    i = 0
+    for pair in Pairs:
+        if i <= amount_of_pepole_per_meal:
+            pair.tocook = 1
+        elif i <= amount_of_pepole_per_meal*2:
+            pair.tocook = 2
+        else:
+            pair.tocook = 3
+
+        i+=1
+
+    strike_pair = adress_check()
+    if len(strike_pair) > 0:
+        i = 0
+        for s in strike_pair:
+            if i % 2 == 0:
+                if s.tocook == 1:
+
+                elif s.tocook == 2:
+
+                elif s.tocook == 3:
+
+
+
+        i +=1
+
+
+    return Pairs
+
+
+def adress_check(Pairs):
+
+    adress_meal_1 = []
+    adress_meal_2 = []
+    adress_meal_3 = []
+    for pair in Pairs:
+        if pair.tocook == 1:
+            adress_meal_1.append(pair.adress)
+        elif pair.tocook == 2:
+            adress_meal_2.append(pair.adress)
+        elif pair.tocook == 3:
+            adress_meal_3.append(pair.adress)
+    strike_pair = []
+    for p in Pairs:
+        strike = 0
+        for a in adress_meal_1:
+            if p.adress.lower() == a.lower():
+                strike +=1
+                if strike > 1:
+                    strike_pair.append(pair)
+        for a in adress_meal_2:
+            if p.adress.lower() == a.lower():
+                strike +=1
+                if strike > 1:
+                    strike_pair.append(pair)
+        for a in adress_meal_3:
+            if p.adress.lower() == a.lower():
+                strike +=1
+                if strike > 1:
+                    strike_pair.append(pair)
+
+    return strike_pair
+
+def swap_meal(pair1,pair2):
+
+    meal_for_pair1 = pair1.tocook
+    meal_for_pair2 = pair2.tocook
+
+    pair1.tocook = meal_for_pair2
+    pair2.tocook = meal_for_pair1
+
+
+    return pair1,pair2
 
 # Decide everyone's route
 def decide_route(p):
@@ -68,6 +150,9 @@ def decide_route(p):
 
 def main():
     pairs = Read_file("../Test.csv")
+
+    decide_meal(pairs)
+
 
 
 main()
