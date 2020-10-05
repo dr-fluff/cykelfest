@@ -3,6 +3,8 @@
 import csv
 import ssl
 import smtplib
+from collections import Counter
+
 
 # Constants found in csv file
 PAIRNR = 0
@@ -225,10 +227,28 @@ def decide_route(pairs):
         elif p.tocook == DESERT:
             d.append(p)
 
-    gg = [[[]]]
+    gg = []
     for i in range(3):
         groups_placement = group_placement(s, m, d, i + 1)
         gg.append(groups_placement)
+
+    gg = check_routs(gg)
+
+    return gg
+
+
+# Check routs
+def check_routs(gg):
+
+    prnr = []
+    for g in gg:
+        for i in g:
+            for j in i:
+                prnr.append(j.pairnr)
+
+    a = Counter(prnr)
+    print(a)
+    print(len(a))
 
     return gg
 
@@ -252,7 +272,7 @@ def group_placement(s, m, d, what_list):
         list2 = s
         list3 = m
 
-    group_group = [[]]
+    group_group = []
     j = 0
     for i in list1:
         g = []
