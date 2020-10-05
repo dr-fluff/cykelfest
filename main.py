@@ -42,6 +42,9 @@ class Pair:
         self.place2 = place2
         self.place3 = place3
 
+    def __str__(self):
+        return "Number % S, " " Name: % s" (self.painr,self.name)
+
 
 # Read csv file and return a 2d array width person
 def Read_file(File_path):
