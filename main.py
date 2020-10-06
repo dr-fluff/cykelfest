@@ -5,7 +5,6 @@ import ssl
 import smtplib
 from collections import Counter
 
-
 # Constants found in csv file
 PAIRNR = 0
 NAME = 2
@@ -43,9 +42,6 @@ class Pair:
         self.place1 = place1
         self.place2 = place2
         self.place3 = place3
-
-    def __str__(self):
-        return "Number % S, " " Name: % s" (self.painr,self.name)
 
 
 # Read csv file and return a 2d array width person
@@ -215,40 +211,81 @@ def swap_meal(pairs, pair1, pair2):
 
 # Decide everyone's route
 def decide_route(pairs):
-    s = []
-    m = []
-    d = []
+    starter_list = []
+    main_corse_list = []
+    desert_list = []
 
     for p in pairs:
         if p.tocook == STARTER:
-            s.append(p)
+            starter_list.append(p)
         elif p.tocook == MAIN_COURSE:
-            m.append(p)
+            main_corse_list.append(p)
         elif p.tocook == DESERT:
-            d.append(p)
+            desert_list.append(p)
 
     gg = []
+    """
     for i in range(3):
-        groups_placement = group_placement(s, m, d, i + 1)
+        groups_placement = group_placement(starter_list, main_corse_list, desert_list, i + 1)
         gg.append(groups_placement)
 
-    gg = check_routs(gg)
+    """
+    """"
+    for g in gg:
+        for i in g:
+            print(i[0].name,i[0].tocook,i[1].name,i[1].tocook,i[2].name,i[2].tocook)
+    """
+
+    all_meal_groups = []
+    for i in range(len(starter_list)):
+        rout_group = []
+        for j in range(3):
+            meal_group = [None,None,None]
+
+            meal_group[0] = starter_list[i]
+
+            if j == 0:
+                meal_group[1] = main_corse_list[i]
+                meal_group[2] = desert_list[i]
+
+                print(meal_group[0].pairnr, meal_group[1].pairnr, meal_group[2].pairnr)
+
+            # main corse
+            elif j == 1:
+
+                meal_group[1] = main_corse_list[i % len(main_corse_list)-1]
+                meal_group[2] = desert_list[((i*2)-1) % len(main_corse_list)-1]
+
+                print(meal_group[0].pairnr,meal_group[1].pairnr,meal_group[2].pairnr)
+
+            # Desert
+            elif j == 2:
+                meal_group[1] = main_corse_list[(i+2) % len(main_corse_list) - 1]
+                meal_group[2] = desert_list[(((i * 2) - 1)+1) % len(main_corse_list) - 1]
+
+                print(meal_group[0].pairnr, meal_group[1].pairnr, meal_group[2].pairnr)
+
+            rout_group.append(meal_group)
+        all_meal_groups.append(rout_group)
+        print("------------")
+
+
+    gg = check_routs(all_meal_groups)
 
     return gg
 
 
 # Check routs
 def check_routs(gg):
-
     prnr = []
     for g in gg:
         for i in g:
             for j in i:
-                prnr.append(j.pairnr)
+                prnr.append(int(j.pairnr))
 
-    a = Counter(prnr)
-    print(a)
-    print(len(a))
+    prnr.sort(reverse=False)
+
+    print(Counter(prnr))
 
     return gg
 
@@ -274,23 +311,35 @@ def group_placement(s, m, d, what_list):
 
     group_group = []
     j = 0
+    list1_index = 1
+    list2_index = 2
     for i in list1:
         g = []
         g.append(i)
 
-        if j + 1 > len(list2) - 1:
+        if j + list1_index > len(list2) - 1:
             g.append(list2[len(list2) - 1 - j])
         else:
-            g.append(list2[j + 1])
+            g.append(list2[j + list1_index])
 
-        if j + 2 > len(list3) - 1:
-            g.append(list3[len(list3) - 2 - j])
+        if j + list2_index > len(list3) - 1:
+            g.append(list3[len(list3) - list2_index - j])
         else:
-            g.append(list3[j + 2])
+            g.append(list3[j + list2_index])
 
         group_group.append(g)
 
         j += 1
+
+    """
+    prnr = []
+    for g in group_group:
+        for i in g:
+            prnr.append(i.pairnr)
+
+    print(Counter(prnr),len(prnr))
+
+    """
 
     return group_group
 
