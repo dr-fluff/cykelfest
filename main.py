@@ -5,9 +5,8 @@ import math
 import ssl
 import smtplib
 from collections import Counter
+import datetime
 
-
-# Constants found in csv file
 PAIRNR = 0
 NAME = 2
 EMAIL = 3
@@ -411,14 +410,101 @@ def group_placement(s, m, d, what_list):
     return group_group
 
 
+def generate_schedule(all_meal_groups,start_time,meal_time,travel_time):
+
+    for route_groups in all_meal_groups:
+        i = 0
+        for meal_group in route_groups:
+            where_array = schedual_help(meal_group[i],all_meal_groups)
+            where_array[i]=meal_group[i]
+
+            schedual_template(meal_group[i],where_array,start_time,meal_time,travel_time)
+
+            i +=1
+
+
+
+def schedual_template(your_group,where_array,start_time,meal_time,travel_time):
+
+    A = ["Förrätt","Huvudrätt","Efterrätt"]
+
+    formated_start_time = start_time.strftime("%H:%M, %d %b %Y")
+    format_main_course_time = (start_time+meal_time+travel_time).strftime("%H:%M")
+    format_desert_course_time = (start_time+2*meal_time+2*travel_time+datetime.timedelta(minutes=15)).strftime("%H:%M")
+
+    template_text = """ 
+{0} är det Cyckelfest!!
+Cykelstyret höftar att man borde hinna på en halvtimme mellan måltider. Men vi rekomenderar att man kollar upp hur långt tid det kommer ta till nästa destination. 
+
+Ditt och din cykelkompis cykelschema:
+
+Förrätt: {1} - Värd {2} - {3} kontakt till värd om ni inte kan koden till porten är eller liknade. Adress: {17} 
+
+30 min restid
+
+Huvudrätt: {4} - Värd {5} - {6}. Adress: {18}
+
+30 min + 15 min då ni är lite fullare 
+
+Efterrätt: {7} - Värd {8} - {9}. Adress: {19}
+
+För när ni serverar eran måltid:  {10}
+Olika matgnäll: {11}, {12}, {13}
+Behövs extra alkoholalternativ: {14}, {15}, {16}
+
+Efterfest där och då vi säger på Facebook evenemanget.""".format(
+        formated_start_time,
+        formated_start_time,where_array[0].name,where_array[0].phonenr,
+        format_main_course_time,where_array[1].name,where_array[1].phonenr,
+        format_desert_course_time,where_array[2].name,where_array[2].phonenr,
+        A[your_group.tocook-1],
+        where_array[0].alergy,where_array[1].alergy,where_array[2].alergy,
+        where_array[0].alchol,where_array[1].alchol,where_array[2].alchol,
+        where_array[0].adress,where_array[1].adress,where_array[2].adress,
+    )
+
+    file_name = your_group.pairnr
+    f = open(file_name+".txt", "w")
+    f.write(template_text)
+    f.close()
+
+
+def schedual_help(group_in,all_meal_groups):
+
+    where_array = [None]*3
+    i = 0
+    for route_groups in all_meal_groups:
+        j = 0
+        for meal_group in route_groups:
+            found_group = False
+            for group in meal_group:
+                if group == group_in:
+                    found_group = True
+                    break
+
+            if found_group and group_in != meal_group[j]:
+                where_array[j] = meal_group[j]
+
+            j+=1
+        i+=1
+
+    return where_array
+
+
 def main():
+    start_time = datetime.datetime(2020, 10, 9, 17, 0)
+    meal_time = datetime.timedelta(minutes=60)
+    travel_time = datetime.timedelta(minutes=30)
+
     pairs = Read_file("../Test.csv")
 
     pairs = decide_meal(pairs)
 
     all_meal_groups = decide_route(pairs)
 
-    for rout_group in all_meal_groups:
+    generate_schedule(all_meal_groups,start_time,meal_time,travel_time)
+
+    """for rout_group in all_meal_groups:
         for meal_group in rout_group:
             if len(meal_group) > 3:
                 print(meal_group[0].pairnr,meal_group[1].pairnr,meal_group[2].pairnr,meal_group[3].pairnr)
@@ -434,6 +520,6 @@ def main():
 
     painr.sort()
 
-    print("Amount of times a pair occurs in route", Counter(painr))
+    print("Amount of times a pair occurs in route", Counter(painr))"""
 
 main()
