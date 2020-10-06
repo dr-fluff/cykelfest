@@ -1,9 +1,11 @@
 #!/usr/bin/python
 # -- coding: utf-8 --
 import csv
+import math
 import ssl
 import smtplib
 from collections import Counter
+
 
 # Constants found in csv file
 PAIRNR = 0
@@ -94,18 +96,18 @@ def decide_meal(pairs):
         elif p.tocook == 3:
             meal_3.append(p)
 
-    amont_of_pairs = len(pairs)
-    amount_of_people_per_meal = amont_of_pairs / 3
+    amount_of_pairs = len(pairs)
+    amount_of_people_per_meal = int(math.ceil(amount_of_pairs / 3.0))
 
     for p in unasigned_tocook:
         if amount_of_people_per_meal > len(meal_1):
-            p.tocook = 1
+            p.tocook = STARTER
             meal_1.append(p)
         elif amount_of_people_per_meal > len(meal_2):
-            p.tocook = 2
+            p.tocook = MAIN_COURSE
             meal_2.append(p)
         else:
-            p.tocook = 3
+            p.tocook = DESERT
             meal_3.append(p)
 
     pairs = []
@@ -215,6 +217,12 @@ def decide_route(pairs):
     main_corse_list = []
     desert_list = []
 
+    org_pairs = pairs
+
+    while len(pairs) % 3 != 0:
+        pair = Pair(-1, -1, -1, -1, -1, -1, -1, -1, 3, -1, -1, -1)
+        pairs.append(pair)
+
     for p in pairs:
         if p.tocook == STARTER:
             starter_list.append(p)
@@ -223,18 +231,7 @@ def decide_route(pairs):
         elif p.tocook == DESERT:
             desert_list.append(p)
 
-    gg = []
-    """
-    for i in range(3):
-        groups_placement = group_placement(starter_list, main_corse_list, desert_list, i + 1)
-        gg.append(groups_placement)
-
-    """
-    """"
-    for g in gg:
-        for i in g:
-            print(i[0].name,i[0].tocook,i[1].name,i[1].tocook,i[2].name,i[2].tocook)
-    """
+    print(len(desert_list),len(main_corse_list),len(starter_list))
 
     all_meal_groups = []
     for i in range(len(starter_list)):
@@ -243,7 +240,12 @@ def decide_route(pairs):
             meal_group = [None,None,None]
 
             meal_group[0] = starter_list[i]
+            meal_group[1] = main_corse_list[(i+j) % len(main_corse_list)]
+            meal_group[2] = desert_list[(i+(j*2)) % len(desert_list)]
 
+            print(meal_group[0].pairnr,meal_group[1].pairnr,meal_group[2].pairnr)
+
+            """
             if j == 0:
                 meal_group[1] = main_corse_list[i]
                 meal_group[2] = desert_list[i]
@@ -252,8 +254,8 @@ def decide_route(pairs):
 
             # main corse
             elif j == 1:
-
-                meal_group[1] = main_corse_list[i % len(main_corse_list)-1]
+                
+                meal_group[1] = main_corse_list[(i+1) % (len(main_corse_list)-1)]
                 meal_group[2] = desert_list[((i*2)-1) % len(main_corse_list)-1]
 
                 print(meal_group[0].pairnr,meal_group[1].pairnr,meal_group[2].pairnr)
@@ -264,30 +266,89 @@ def decide_route(pairs):
                 meal_group[2] = desert_list[(((i * 2) - 1)+1) % len(main_corse_list) - 1]
 
                 print(meal_group[0].pairnr, meal_group[1].pairnr, meal_group[2].pairnr)
+            
+            """
 
             rout_group.append(meal_group)
+        print("----------")
         all_meal_groups.append(rout_group)
-        print("------------")
 
+    print("")
+    print("")
 
-    gg = check_routs(all_meal_groups)
+    all_meal_groups = check_routs(all_meal_groups,org_pairs)
 
-    return gg
+    return all_meal_groups
 
 
 # Check routs
-def check_routs(gg):
-    prnr = []
-    for g in gg:
-        for i in g:
-            for j in i:
-                prnr.append(int(j.pairnr))
+def check_routs(all_meal_groups, pairs):
 
-    prnr.sort(reverse=False)
+    painr = []
+    for rout_group in all_meal_groups:
+        for meal_group in rout_group:
+            for pair in meal_group:
+                painr.append(int(pair.pairnr))
 
-    print(Counter(prnr))
+    painr.sort()
 
-    return gg
+    print("Amount of times a pair occurs in route",Counter(painr))
+
+    s = []
+    m = []
+    i = 0
+    for rout_group in all_meal_groups:
+
+        if rout_group[2][2].pairnr == -1:
+            s.append(rout_group[2][0])
+            m.append(rout_group[2][1])
+            del all_meal_groups[i][2]
+        i += 1
+
+    for sx in s:
+        i = 0
+        for rout_group in all_meal_groups:
+            if len(rout_group) >= 3:
+                desert = rout_group[2]
+                if len(desert) <= 3:
+                    if sx.pairnr != desert[0].pairnr and sx.pairnr != desert[1].pairnr and sx.pairnr != desert[2].pairnr:
+                        if is_ok(all_meal_groups,sx,desert[0]) and is_ok(all_meal_groups,sx,desert[1]) and is_ok(all_meal_groups,sx,desert[2]):
+                            all_meal_groups[i][2].append(sx)
+                            break
+            i += 1
+
+    for sx in m:
+        i = 0
+        for rout_group in all_meal_groups:
+            if len(rout_group) >= 3:
+                desert = rout_group[2]
+                if len(desert) <= 3:
+                    if sx.pairnr != desert[0].pairnr and sx.pairnr != desert[1].pairnr and sx.pairnr != desert[2].pairnr:
+                        if is_ok(all_meal_groups, sx, desert[0]) and is_ok(all_meal_groups, sx, desert[1]) and is_ok(
+                                all_meal_groups, sx, desert[2]):
+                            all_meal_groups[i][2].append(sx)
+                            break
+            i += 1
+
+    pairs_prep_count = [0 for _ in range(len(pairs))]
+    for rout_group in all_meal_groups:
+        pairs_prep_count[int(rout_group[0][0].pairnr)-1] += 1
+        pairs_prep_count[int(rout_group[1][1].pairnr)-1] += 1
+        if len(rout_group) > 2:
+            pairs_prep_count[int(rout_group[2][2].pairnr)-1] += 1
+
+    print(pairs_prep_count)
+
+    return all_meal_groups
+
+
+def is_ok(all_meal_groups, pair1, pair2):
+    for rout_group in all_meal_groups:
+        for meal_group in rout_group:
+            if (pair1.pairnr == meal_group[0].pairnr or pair1.pairnr == meal_group[1].pairnr or pair1.pairnr == meal_group[2].pairnr) and \
+                    (pair2.pairnr == meal_group[0].pairnr or pair2.pairnr == meal_group[1].pairnr or pair2.pairnr == meal_group[2].pairnr):
+                return False
+    return True
 
 
 # Help function for deciding routs
@@ -349,7 +410,24 @@ def main():
 
     pairs = decide_meal(pairs)
 
-    meal_groups = decide_route(pairs)
+    all_meal_groups = decide_route(pairs)
 
+    for rout_group in all_meal_groups:
+        for meal_group in rout_group:
+            if len(meal_group) > 3:
+                print(meal_group[0].pairnr,meal_group[1].pairnr,meal_group[2].pairnr,meal_group[3].pairnr)
+            else:
+                print(meal_group[0].pairnr, meal_group[1].pairnr, meal_group[2].pairnr)
+        print("___________")
+
+    painr = []
+    for rout_group in all_meal_groups:
+        for meal_group in rout_group:
+            for pair in meal_group:
+                painr.append(int(pair.pairnr))
+
+    painr.sort()
+
+    print("Amount of times a pair occurs in route", Counter(painr))
 
 main()
