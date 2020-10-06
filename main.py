@@ -99,16 +99,22 @@ def decide_meal(pairs):
     amount_of_pairs = len(pairs)
     amount_of_people_per_meal = int(math.ceil(amount_of_pairs / 3.0))
 
+    i = 0
     for p in unasigned_tocook:
         if amount_of_people_per_meal > len(meal_1):
             p.tocook = STARTER
+            unasigned_tocook[i].tocook = STARTER
             meal_1.append(p)
         elif amount_of_people_per_meal > len(meal_2):
             p.tocook = MAIN_COURSE
+            unasigned_tocook[i].tocook = MAIN_COURSE
             meal_2.append(p)
         else:
             p.tocook = DESERT
+            unasigned_tocook[i].tocook = DESERT
             meal_3.append(p)
+
+        i +=1
 
     pairs = []
     for m in meal_1:
@@ -124,21 +130,21 @@ def decide_meal(pairs):
         for s in strike_pair:
             if i % 2 == 0:
                 if s.tocook == 1:
-                    for p in pairs:
+                    for p in unasigned_tocook:
                         if p.tocook != 1:
                             print("Time to swap a meal in group 1")
                             pairs = swap_meal(pairs, s, p)
                             break
 
                 elif s.tocook == 2:
-                    for p in pairs:
+                    for p in unasigned_tocook:
                         if p.tocook != 2:
                             print("Time to swap a meal in group 2")
                             pairs = swap_meal(pairs, s, p)
                             break
 
                 elif s.tocook == 3:
-                    for p in pairs:
+                    for p in unasigned_tocook:
                         if p.tocook != 3:
                             print("Time to swap a meal in group 3")
                             pairs = swap_meal(pairs, s, p)
