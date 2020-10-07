@@ -6,6 +6,7 @@ import ssl
 import smtplib
 from collections import Counter
 import datetime
+import random
 
 PAIRNR = 0
 NAME = 2
@@ -65,17 +66,26 @@ def Read_file(File_path):
 
 
 # Send an email to recipient with message
-def send_email(recipient, message):
-    sender = "max@idermark.com"
-    port = 465  # for ssl
-    password = "asd"
+def send_email(recipient, subject, message):
+    sender = ""
+    password = ""
+
+    mail = f"""\
+Subject: {subject}
+To: {recipient}
+From: {sender}
+{message}
+
+""".format(sender, recipient, subject, message)
 
     # Create a secure SSL context
+    port = 465  # for ssl
     context = ssl.create_default_context()
 
     with smtplib.SMTP_SSL("smtp.gmail.com", port, context=context) as server:
         server.login(sender, password)
-        server.sendmail(sender, recipient, message.encode("utf-8"))
+        server.sendmail(sender, recipient, mail.encode("utf-8"))
+
 
 
 # Decide all
@@ -248,7 +258,7 @@ def decide_route(pairs):
             meal_group[1] = main_corse_list[(i+j) % len(main_corse_list)]
             meal_group[2] = desert_list[(i+(j*2)) % len(desert_list)]
 
-            print(meal_group[0].pairnr,meal_group[1].pairnr,meal_group[2].pairnr)
+            #print(meal_group[0].pairnr,meal_group[1].pairnr,meal_group[2].pairnr)
 
             """
             if j == 0:
@@ -259,7 +269,7 @@ def decide_route(pairs):
 
             # main corse
             elif j == 1:
-                
+
                 meal_group[1] = main_corse_list[(i+1) % (len(main_corse_list)-1)]
                 meal_group[2] = desert_list[((i*2)-1) % len(main_corse_list)-1]
 
@@ -271,7 +281,7 @@ def decide_route(pairs):
                 meal_group[2] = desert_list[(((i * 2) - 1)+1) % len(main_corse_list) - 1]
 
                 print(meal_group[0].pairnr, meal_group[1].pairnr, meal_group[2].pairnr)
-            
+
             """
 
             rout_group.append(meal_group)
@@ -282,6 +292,15 @@ def decide_route(pairs):
     print("")
 
     all_meal_groups = check_routs(all_meal_groups,org_pairs)
+
+    print("--- Group schedule ---")
+    for rout_group in all_meal_groups:
+        print("---")
+        for meal_group in rout_group:
+            if len(meal_group) > 3:
+                print(meal_group[0].pairnr,meal_group[1].pairnr,meal_group[2].pairnr, meal_group[3].pairnr)
+            else:
+                print(meal_group[0].pairnr,meal_group[1].pairnr,meal_group[2].pairnr)
 
     return all_meal_groups
 
@@ -342,7 +361,7 @@ def check_routs(all_meal_groups, pairs):
         if len(rout_group) > 2:
             pairs_prep_count[int(rout_group[2][2].pairnr)-1] += 1
 
-    print(pairs_prep_count)
+    print("Pair preperation count = ", pairs_prep_count)
 
     return all_meal_groups
 
@@ -418,13 +437,34 @@ def generate_schedule(all_meal_groups,start_time,meal_time,travel_time):
             where_array = schedual_help(meal_group[i],all_meal_groups)
             where_array[i]=meal_group[i]
 
-            schedual_template(meal_group[i],where_array,start_time,meal_time,travel_time)
+            amount_visit_pairs = find_visiting_pairs(meal_group[i], all_meal_groups)
+
+            schedual_template(meal_group[i],where_array,amount_visit_pairs,start_time,meal_time,travel_time)
 
             i +=1
 
+def find_visiting_pairs(pair, all_meal_groups):
 
+    for rout_groups in all_meal_groups:
+        i = 0
 
-def schedual_template(your_group,where_array,start_time,meal_time,travel_time):
+        for meal_group in rout_groups:
+            if i + 1 == pair.tocook and meal_group[i] == pair:
+
+                inval_group_count = 0
+                for group in meal_group:
+                    if group.pairnr == -1:
+                        inval_group_count += 1
+
+                amount_visit_pairs = len(meal_group) - 1 - inval_group_count
+
+                return amount_visit_pairs
+
+            i += 1
+
+    return -1
+
+def schedual_template(your_group,where_array,amount_of_pairs,start_time,meal_time,travel_time):
 
     A = ["Förrätt","Huvudrätt","Efterrätt"]
 
@@ -432,27 +472,36 @@ def schedual_template(your_group,where_array,start_time,meal_time,travel_time):
     format_main_course_time = (start_time+meal_time+travel_time).strftime("%H:%M")
     format_desert_course_time = (start_time+2*meal_time+2*travel_time+datetime.timedelta(minutes=15)).strftime("%H:%M")
 
-    template_text = """ 
+    template_text = """
+Hejsan {20} och {21}!
+
 {0} är det Cyckelfest!!
-Cykelstyret höftar att man borde hinna på en halvtimme mellan måltider. Men vi rekomenderar att man kollar upp hur långt tid det kommer ta till nästa destination. 
+
+Cykelstyret höftar att man borde hinna på en halvtimme mellan måltider. Men vi rekomenderar att man kollar upp hur långt tid det kommer ta till nästa destination.
 
 Ditt och din cykelkompis cykelschema:
 
-Förrätt: {1} - Värd {2} - {3} kontakt till värd om ni inte kan koden till porten är eller liknade. Adress: {17} 
+Förrätt: {1} - Värd {2} - {3} kontakt till värd om ni inte kan koden till porten är eller liknade. Adress: {17}
 
 30 min restid
 
 Huvudrätt: {4} - Värd {5} - {6}. Adress: {18}
 
-30 min + 15 min då ni är lite fullare 
+30 min restid
 
 Efterrätt: {7} - Värd {8} - {9}. Adress: {19}
 
-För när ni serverar eran måltid:  {10}
+Ni ska servera följande rätt:  {10} och {22} par kommer.
 Olika matgnäll: {11}, {12}, {13}
-Behövs extra alkoholalternativ: {14}, {15}, {16}
+Behövs det ett alkoholfritt alternativ: {14}, {15}, {16}
 
-Efterfest där och då vi säger på Facebook evenemanget.""".format(
+Efterfest där och då vi säger på Facebook evenemanget.
+
+För funderingar och frågor kontakta mats.gard@me.com
+
+Med vänliga hälsningar,
+Cykelstyret
+""".format(
         formated_start_time,
         formated_start_time,where_array[0].name,where_array[0].phonenr,
         format_main_course_time,where_array[1].name,where_array[1].phonenr,
@@ -461,6 +510,7 @@ Efterfest där och då vi säger på Facebook evenemanget.""".format(
         where_array[0].alergy,where_array[1].alergy,where_array[2].alergy,
         where_array[0].alchol,where_array[1].alchol,where_array[2].alchol,
         where_array[0].adress,where_array[1].adress,where_array[2].adress,
+        your_group.name, your_group.teammember, amount_of_pairs
     )
 
     file_name = your_group.pairnr
@@ -490,15 +540,32 @@ def schedual_help(group_in,all_meal_groups):
 
     return where_array
 
+#Sends out email to all pairs with relation to their generated txt file and their pairnumber
+def broadcast_emails(pairs):
+    print("Broacast email function called")
+    for p in pairs:
+
+        try:
+            txt_file = str(p.pairnr + ".txt")
+
+            with open(txt_file, 'r') as file:
+                message = file.read()
+
+            send_email(p.email, "Cykelfesten närmar sig!", message)
+        except:
+            print("Something went wrong", p.name, p.pairnr)
 
 def main():
     start_time = datetime.datetime(2020, 10, 9, 17, 0)
     meal_time = datetime.timedelta(minutes=60)
     travel_time = datetime.timedelta(minutes=30)
 
-    pairs = Read_file("../Test.csv")
+    pairs = Read_file("Test.csv")
+    random.shuffle(pairs)
 
     pairs = decide_meal(pairs)
+
+
 
     all_meal_groups = decide_route(pairs)
 
@@ -521,5 +588,8 @@ def main():
     painr.sort()
 
     print("Amount of times a pair occurs in route", Counter(painr))"""
+
+    broadcast_emails(pairs)
+    #send_email("max@idermark.com", "Cykelfest", "meddelande")
 
 main()
