@@ -443,6 +443,7 @@ def generate_schedule(all_meal_groups,start_time,meal_time,travel_time):
 
             i +=1
 
+
 def find_visiting_pairs(pair, all_meal_groups):
 
     for rout_groups in all_meal_groups:
@@ -463,6 +464,7 @@ def find_visiting_pairs(pair, all_meal_groups):
             i += 1
 
     return -1
+
 
 def schedual_template(your_group,where_array,amount_of_pairs,start_time,meal_time,travel_time):
 
